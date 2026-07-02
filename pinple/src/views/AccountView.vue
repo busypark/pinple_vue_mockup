@@ -41,22 +41,6 @@
         <span class="field-counter">{{ bio.length }}/80</span>
       </div>
 
-      <!-- Change password section -->
-      <div class="section-divider-label">비밀번호 변경</div>
-      <div class="field-group">
-        <label class="field-label">현재 비밀번호</label>
-        <input type="password" class="field-input" placeholder="현재 비밀번호" v-model="currentPw" />
-      </div>
-      <div class="field-group">
-        <label class="field-label">새 비밀번호</label>
-        <input type="password" class="field-input" placeholder="새 비밀번호 (8자 이상)" v-model="newPw" />
-      </div>
-      <div class="field-group">
-        <label class="field-label">새 비밀번호 확인</label>
-        <input type="password" class="field-input" :class="{ error: newPwConfirm && newPw !== newPwConfirm }" placeholder="비밀번호 재입력" v-model="newPwConfirm" />
-        <span v-if="newPwConfirm && newPw !== newPwConfirm" class="field-error">비밀번호가 일치하지 않습니다</span>
-      </div>
-
       <div style="height: 24px" />
     </div>
   </div>
@@ -69,13 +53,10 @@ import { currentUser } from '../data/dummy.js'
 
 const router = useRouter()
 
-const nickname     = ref(currentUser.nickname)
-const bio          = ref(currentUser.bio)
-const previewImg   = ref('')
-const currentPw    = ref('')
-const newPw        = ref('')
-const newPwConfirm = ref('')
-const showToast    = ref(false)
+const nickname   = ref(currentUser.nickname)
+const bio        = ref(currentUser.bio)
+const previewImg = ref('')
+const showToast  = ref(false)
 
 // Cycle through dummy avatars for photo change
 const photoPool = [
@@ -94,8 +75,7 @@ function cyclePhoto() {
 const hasChanges = computed(() =>
   nickname.value !== currentUser.nickname ||
   bio.value !== currentUser.bio ||
-  previewImg.value !== '' ||
-  (currentPw.value && newPw.value && newPw.value === newPwConfirm.value)
+  previewImg.value !== ''
 )
 
 function handleSave() {
@@ -281,16 +261,6 @@ function handleBack() {
   font-size: 11px;
   color: #E05C5C;
   margin-top: 5px;
-}
-
-/* ── Section divider ──────────────────── */
-.section-divider-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-hint);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 14px 16px 4px;
 }
 
 /* ── Toast ─────────────────────────────── */

@@ -45,6 +45,21 @@
           랜덤 발견
         </button>
       </div>
+
+      <!-- 지역/카테고리 랜덤 필터 버튼 -->
+      <div class="map-filter-row">
+        <button class="filter-btn" @click.stop="pickRandomByRegion">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/></svg>
+          지역 랜덤
+        </button>
+        <button class="filter-btn" @click.stop="pickRandomByCategory">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          카테고리 랜덤
+        </button>
+        <Transition name="chip-fade">
+          <span v-if="lastRandomFilter" class="filter-result-chip">{{ lastRandomFilter }}</span>
+        </Transition>
+      </div>
     </div>
 
     <!-- ── 장소 바텀시트 ── -->
@@ -68,8 +83,22 @@
         </div>
 
         <!-- 관련 리뷰핀 -->
-        <div class="sheet-section-label">리뷰핀</div>
-        <div v-if="placeReviews.length === 0" class="sheet-no-reviews">(없습니다)</div>
+        <div class="sheet-section-row">
+          <span class="sheet-section-label">리뷰핀</span>
+          <div class="sheet-sort-tabs">
+            <button
+              class="sheet-sort-btn"
+              :class="{ active: sheetSortTab === 'latest' }"
+              @click="sheetSortTab = 'latest'"
+            >최신순</button>
+            <button
+              class="sheet-sort-btn"
+              :class="{ active: sheetSortTab === 'popular' }"
+              @click="sheetSortTab = 'popular'"
+            >인기순</button>
+          </div>
+        </div>
+        <div v-if="placeReviews.length === 0" class="sheet-no-reviews">등록된 리뷰핀이 없습니다</div>
         <div v-else class="sheet-reviews-scroll">
           <div
             v-for="rp in placeReviews"
@@ -100,28 +129,53 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { placePins, reviewPins, users } from '../data/dummy.js'
+import { placePins, reviewPins, users, regions } from '../data/dummy.js'
 
 const router = useRouter()
 
-const selectedPlace = ref(null)
+const selectedPlace   = ref(null)
+const sheetSortTab    = ref('latest')
+const lastRandomFilter = ref('')
 
 const placeReviews = computed(() => {
   if (!selectedPlace.value) return []
-  return reviewPins.filter(rp => rp.placePinId === selectedPlace.value.id)
+  const pins = reviewPins.filter(rp => rp.placePinId === selectedPlace.value.id)
+  if (sheetSortTab.value === 'popular') {
+    return [...pins].sort((a, b) => (b.likes + b.views * 0.5) - (a.likes + a.views * 0.5))
+  }
+  return [...pins].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 })
 
 function selectPlace(place) {
   selectedPlace.value = selectedPlace.value?.id === place.id ? null : place
+  if (selectedPlace.value) lastRandomFilter.value = ''
 }
 
 function closeSheet() {
   selectedPlace.value = null
+  lastRandomFilter.value = ''
 }
 
 function pickRandom() {
   const others = placePins.filter(p => p.id !== selectedPlace.value?.id)
   selectedPlace.value = others[Math.floor(Math.random() * others.length)]
+  lastRandomFilter.value = ''
+}
+
+function pickRandomByRegion() {
+  const randomRegion = regions[Math.floor(Math.random() * regions.length)]
+  const filtered = placePins.filter(p => p.regions?.includes(randomRegion))
+  const pool = filtered.length > 0 ? filtered : placePins
+  selectedPlace.value = pool[Math.floor(Math.random() * pool.length)]
+  lastRandomFilter.value = randomRegion
+}
+
+function pickRandomByCategory() {
+  const cats = [...new Set(placePins.map(p => p.category))]
+  const randomCat = cats[Math.floor(Math.random() * cats.length)]
+  const filtered = placePins.filter(p => p.category === randomCat)
+  selectedPlace.value = filtered[Math.floor(Math.random() * filtered.length)]
+  lastRandomFilter.value = randomCat + ' 카테고리'
 }
 
 function goReview(id) {
@@ -307,6 +361,51 @@ function categoryClass(cat) {
 
 .random-btn:active { opacity: 0.8; }
 
+/* ── 필터 버튼 행 ─────────────────────── */
+.map-filter-row {
+  position: absolute;
+  top: 62px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  z-index: 20;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(6px);
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+  transition: background 0.15s;
+}
+
+.filter-btn:active { background: var(--primary-light); color: var(--primary); }
+
+.filter-result-chip {
+  background: var(--primary);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 1px 6px rgba(232,83,106,0.35);
+}
+
+.chip-fade-enter-active, .chip-fade-leave-active { transition: opacity 0.2s; }
+.chip-fade-enter-from, .chip-fade-leave-to { opacity: 0; }
+
 /* ── 바텀시트 ───────────────────────────── */
 .place-sheet {
   flex-shrink: 0;
@@ -391,14 +490,47 @@ function categoryClass(cat) {
   margin-top: 2px;
 }
 
+.sheet-section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px 4px;
+  flex-shrink: 0;
+}
+
 .sheet-section-label {
   font-size: 11px;
   font-weight: 700;
   color: var(--text-hint);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 8px 16px 6px;
-  flex-shrink: 0;
+}
+
+.sheet-sort-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--bg);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.sheet-sort-btn {
+  padding: 3px 10px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-hint);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.sheet-sort-btn.active {
+  background: var(--bg-white);
+  color: var(--primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
 
 .sheet-no-reviews {

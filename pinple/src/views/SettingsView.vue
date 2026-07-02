@@ -22,6 +22,13 @@
           <span class="settings-item-label">계정 관리</span>
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--text-hint)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
+        <button class="settings-item" @click="showPwDialog = true">
+          <span class="settings-item-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+          <span class="settings-item-label">비밀번호 변경</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--text-hint)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
         <button class="settings-item" @click="router.push('/pincrew')">
           <span class="settings-item-icon">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -95,6 +102,48 @@
       <div style="height: 20px" />
     </div>
 
+    <!-- 비밀번호 변경 완료 toast -->
+    <Transition name="fade-overlay">
+      <div v-if="showPwToast" class="pw-toast">비밀번호가 변경됐습니다</div>
+    </Transition>
+
+    <!-- Password change dialog -->
+    <Transition name="fade-overlay">
+      <div v-if="showPwDialog" class="overlay-dim">
+        <div class="dialog">
+          <div class="dialog-title">비밀번호 변경</div>
+          <div class="pw-fields">
+            <input
+              type="password"
+              v-model="currentPw"
+              class="pw-input"
+              placeholder="현재 비밀번호"
+            />
+            <input
+              type="password"
+              v-model="newPw"
+              class="pw-input"
+              placeholder="새 비밀번호 (8자 이상)"
+            />
+            <div class="pw-input-wrap">
+              <input
+                type="password"
+                v-model="newPwConfirm"
+                class="pw-input"
+                :class="{ error: newPwConfirm && newPw !== newPwConfirm }"
+                placeholder="새 비밀번호 확인"
+              />
+              <span v-if="newPwConfirm && newPw !== newPwConfirm" class="pw-error">비밀번호가 일치하지 않습니다</span>
+            </div>
+          </div>
+          <div class="dialog-btns">
+            <button class="dialog-btn-cancel" @click="closePwDialog">취소</button>
+            <button class="dialog-btn-confirm dialog-btn-primary" :disabled="!canChangePw" @click="handlePwChange">변경</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
     <!-- Withdraw confirm dialog -->
     <Transition name="fade-overlay">
       <div v-if="showWithdrawDialog" class="overlay-dim">
@@ -112,16 +161,45 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { isLoggedIn } from '../store/auth.js'
 
 const router = useRouter()
-const pushEnabled = ref(true)
-const likeEnabled = ref(true)
+const pushEnabled       = ref(true)
+const likeEnabled       = ref(true)
 const showWithdrawDialog = ref(false)
 
+// ── 비밀번호 변경 ─────────────────────────
+const showPwDialog  = ref(false)
+const currentPw     = ref('')
+const newPw         = ref('')
+const newPwConfirm  = ref('')
+const showPwToast   = ref(false)
+
+const canChangePw = computed(() =>
+  currentPw.value.length > 0 &&
+  newPw.value.length >= 8 &&
+  newPw.value === newPwConfirm.value
+)
+
+function closePwDialog() {
+  showPwDialog.value  = false
+  currentPw.value     = ''
+  newPw.value         = ''
+  newPwConfirm.value  = ''
+}
+
+function handlePwChange() {
+  if (!canChangePw.value) return
+  closePwDialog()
+  showPwToast.value = true
+  setTimeout(() => { showPwToast.value = false }, 2000)
+}
+
 function handleLogout() {
-  router.push('/')
+  isLoggedIn.value = false
+  router.push('/login')
 }
 </script>
 
@@ -339,6 +417,67 @@ function handleLogout() {
   font-weight: 700;
   cursor: pointer;
   font-family: inherit;
+}
+
+/* ── 비밀번호 다이얼로그 ──────────────── */
+.pw-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.pw-input-wrap { display: flex; flex-direction: column; gap: 4px; }
+
+.pw-input {
+  width: 100%;
+  height: 40px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: var(--bg);
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.pw-input:focus { border-color: var(--primary); }
+.pw-input.error { border-color: #E05C5C; }
+
+.pw-error {
+  font-size: 11px;
+  color: #E05C5C;
+  text-align: left;
+}
+
+.dialog-btn-primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+}
+
+.dialog-btn-primary:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* ── Toast ──────────────────────────────── */
+.pw-toast {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 300;
+  background: rgba(30,30,30,0.82);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 20px;
+  white-space: nowrap;
 }
 
 .fade-overlay-enter-active, .fade-overlay-leave-active { transition: opacity 0.2s; }

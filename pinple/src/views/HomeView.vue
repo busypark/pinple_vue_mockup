@@ -97,7 +97,9 @@ const tabs = [
 ]
 const activeTab = ref('popular')
 
-const popularFeed = [...reviewPins].sort((a, b) => b.likes - a.likes)
+const popularFeed = [...reviewPins].sort((a, b) =>
+  (b.likes + b.views * 0.5) - (a.likes + a.views * 0.5)
+)
 const followingFeed = followingData
 
 const randomFeed  = ref(shuffle([...reviewPins]))

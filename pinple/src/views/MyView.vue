@@ -46,6 +46,22 @@
         </div>
       </div>
 
+      <!-- ── 뱃지 ────────────────────────────── -->
+      <div class="badge-section">
+        <div class="badge-section-header">
+          <span class="badge-section-title">뱃지</span>
+          <span class="badge-earned-count">{{ earnedCount }} / {{ badges.length }}</span>
+        </div>
+        <div class="badge-scroll">
+          <div v-for="badge in badges" :key="badge.id" class="badge-item" :class="{ locked: !badge.earned }">
+            <div class="badge-icon" :style="badge.earned ? { background: badge.color + '22', border: '2px solid ' + badge.color } : {}">
+              <component :is="badgeIcon(badge.id)" :color="badge.earned ? badge.color : 'var(--border-dark)'" />
+            </div>
+            <span class="badge-name">{{ badge.name }}</span>
+          </div>
+        </div>
+      </div>
+
       <!-- ── Quick menu ───────────────────────── -->
       <div class="quick-menu">
         <button class="quick-item" @click="router.push('/liked')">
@@ -71,7 +87,18 @@
           <span class="section-badge">{{ myPins.length }}</span>
         </div>
 
-        <div v-if="myPins.length === 0" class="pins-empty">
+        <div class="tab-bar">
+          <button class="tab-btn" :class="{ active: activeTab === 'feed' }" @click="activeTab = 'feed'">
+            피드형
+            <span class="tab-count">{{ feedPins.length }}</span>
+          </button>
+          <button class="tab-btn" :class="{ active: activeTab === 'blog' }" @click="activeTab = 'blog'">
+            블로그형
+            <span class="tab-count">{{ blogPins.length }}</span>
+          </button>
+        </div>
+
+        <div v-if="visiblePins.length === 0" class="pins-empty">
           <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="var(--border)" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           <p>아직 작성한 리뷰핀이 없어요</p>
           <span>하단 + 버튼으로 첫 번째 핀을 남겨보세요</span>
@@ -79,13 +106,12 @@
 
         <div v-else class="pins-grid">
           <div
-            v-for="pin in myPins"
+            v-for="pin in visiblePins"
             :key="pin.id"
             class="pin-cell"
             @click="router.push({ name: 'review-detail', params: { id: pin.id } })"
           >
             <img :src="pin.images[pin.representativeImageIndex]" />
-            <span class="pin-cell-type">{{ pin.type === 'feed' ? '피드' : '블로그' }}</span>
           </div>
         </div>
       </div>
@@ -96,13 +122,43 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, h } from 'vue'
 import { useRouter } from 'vue-router'
-import { currentUser, reviewPins, notifications } from '../data/dummy.js'
-import { showTypeSelector } from '../store/register.js'
+import { currentUser, reviewPins, notifications, badges } from '../data/dummy.js'
 
 const router = useRouter()
-const myPins = computed(() => reviewPins.filter(rp => rp.authorId === currentUser.id))
+
+const myPins  = computed(() => reviewPins.filter(rp => rp.authorId === currentUser.id))
+const feedPins = computed(() => myPins.value.filter(p => p.type === 'feed'))
+const blogPins = computed(() => myPins.value.filter(p => p.type === 'blog'))
+
+const activeTab   = ref('feed')
+const visiblePins = computed(() => activeTab.value === 'feed' ? feedPins.value : blogPins.value)
+
+const earnedCount = computed(() => badges.filter(b => b.earned).length)
+
+const BADGE_PATHS = {
+  1: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 10m-3 0a3 3 0 1 0 6 0 3 3 0 0 0-6 0',
+  2: 'M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z',
+  3: 'M12 2L12 22 M2 12L22 12 M12 2a10 10 0 0 1 0 20A10 10 0 0 1 12 2z M12 7v1 M12 16v1 M7 12h1 M16 12h1',
+  4: 'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z',
+  5: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
+  6: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75',
+  7: 'M22 2L11 13 M22 2l-7 20-4-9-9-4 20-7z',
+  8: 'M8 6h8M6 10h12M8 14h8M6 18h12 M4 4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H4z',
+}
+
+function badgeIcon(id) {
+  return {
+    render() {
+      return h('svg', { viewBox: '0 0 24 24', width: 22, height: 22, fill: 'none', stroke: this.$attrs.color, 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+        BADGE_PATHS[id].split(' M').map((seg, i) =>
+          h('path', { d: (i === 0 ? seg : 'M' + seg).trim() })
+        )
+      )
+    }
+  }
+}
 </script>
 
 <style scoped>
@@ -126,7 +182,6 @@ const myPins = computed(() => reviewPins.filter(rp => rp.authorId === currentUse
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: 0;
 }
 
 .hero-actions {
@@ -167,7 +222,6 @@ const myPins = computed(() => reviewPins.filter(rp => rp.authorId === currentUse
   align-items: center;
   justify-content: center;
   padding: 0 3px;
-  font-family: inherit;
 }
 
 .profile-photo-wrap {
@@ -237,7 +291,7 @@ const myPins = computed(() => reviewPins.filter(rp => rp.authorId === currentUse
   color: var(--text-secondary);
   cursor: pointer;
   font-family: inherit;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, color 0.15s;
 }
 
 .edit-profile-btn:hover { border-color: var(--primary); color: var(--primary); }
@@ -279,6 +333,80 @@ const myPins = computed(() => reviewPins.filter(rp => rp.authorId === currentUse
   width: 1px;
   height: 32px;
   background: var(--border);
+}
+
+/* ── 뱃지 ─────────────────────────────── */
+.badge-section {
+  background: var(--bg-white);
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 14px;
+}
+
+.badge-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 8px;
+}
+
+.badge-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.badge-earned-count {
+  font-size: 12px;
+  color: var(--text-hint);
+  font-weight: 500;
+}
+
+.badge-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 0 16px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  width: 62px;
+}
+
+.badge-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s;
+}
+
+.badge-item.locked .badge-icon {
+  opacity: 0.45;
+}
+
+.badge-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.3;
+  word-break: keep-all;
+}
+
+.badge-item.locked .badge-name {
+  color: var(--text-hint);
 }
 
 /* ── Quick menu ───────────────────────── */
@@ -337,7 +465,7 @@ const myPins = computed(() => reviewPins.filter(rp => rp.authorId === currentUse
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 14px 16px 10px;
+  padding: 14px 16px 0;
 }
 
 .section-title {
@@ -355,6 +483,51 @@ const myPins = computed(() => reviewPins.filter(rp => rp.authorId === currentUse
   border-radius: var(--radius-full);
 }
 
+/* ── Tabs ─────────────────────────────── */
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  margin-top: 10px;
+}
+
+.tab-btn {
+  flex: 1;
+  height: 40px;
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-hint);
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.tab-count {
+  font-size: 11px;
+  background: var(--bg);
+  color: var(--text-hint);
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+}
+
+.tab-btn.active .tab-count {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+/* ── Pins grid ─────────────────────────── */
 .pins-empty {
   display: flex;
   flex-direction: column;
@@ -384,7 +557,6 @@ const myPins = computed(() => reviewPins.filter(rp => rp.authorId === currentUse
 .pin-cell {
   aspect-ratio: 1;
   overflow: hidden;
-  position: relative;
   cursor: pointer;
   background: var(--border);
 }
@@ -394,17 +566,5 @@ const myPins = computed(() => reviewPins.filter(rp => rp.authorId === currentUse
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-.pin-cell-type {
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  background: rgba(0,0,0,0.5);
-  color: white;
-  font-size: 8px;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 3px;
 }
 </style>

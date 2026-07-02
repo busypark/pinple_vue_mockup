@@ -1,10 +1,10 @@
 <template>
   <div class="feed-card" @click="$emit('click')">
     <div class="feed-header">
-      <img :src="author.profileImg" :alt="author.nickname" class="profile-img" />
+      <img :src="author.profileImg" :alt="author.nickname" class="profile-img" @click="goToAuthor" />
       <div class="feed-meta">
         <div class="feed-top-row">
-          <span class="nickname">{{ author.nickname }}</span>
+          <span class="nickname" @click="goToAuthor">{{ author.nickname }}</span>
           <span class="separator">·</span>
           <span class="place-name">{{ place.name }}</span>
         </div>
@@ -45,18 +45,29 @@
 
 <script setup>
 import { computed } from 'vue'
-import { users, placePins } from '../data/dummy.js'
+import { useRouter } from 'vue-router'
+import { users, placePins, currentUser } from '../data/dummy.js'
 
 const props = defineProps({
   pin: { type: Object, required: true },
 })
 defineEmits(['click'])
 
+const router = useRouter()
 const author = computed(() => users.find(u => u.id === props.pin.authorId))
 const place  = computed(() => placePins.find(p => p.id === props.pin.placePinId))
 
 function truncate(str, n) {
   return str.length > n ? str.slice(0, n) + '...' : str
+}
+
+function goToAuthor(e) {
+  e.stopPropagation()
+  if (author.value.id === currentUser.id) {
+    router.push('/my')
+  } else {
+    router.push({ name: 'user-profile', params: { id: author.value.id } })
+  }
 }
 </script>
 
@@ -83,7 +94,11 @@ function truncate(str, n) {
   object-fit: cover;
   flex-shrink: 0;
   background: var(--border);
+  cursor: pointer;
 }
+
+.nickname { cursor: pointer; }
+.nickname:hover { text-decoration: underline; }
 
 .feed-meta { flex: 1; min-width: 0; }
 

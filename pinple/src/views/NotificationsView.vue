@@ -22,7 +22,11 @@
         >
           <!-- Actor avatar or system icon -->
           <div class="notif-icon">
-            <img v-if="n.actorId" :src="getUser(n.actorId).profileImg" class="actor-avatar" />
+            <template v-if="n.actorId">
+              <img :src="getUser(n.actorId).profileImg" class="actor-avatar" />
+              <span class="action-badge" :class="`action-${n.action}`">{{ actionEmoji(n.action) }}</span>
+            </template>
+            <div v-else-if="n.action === 'badge'" class="badge-icon">🎖</div>
             <div v-else class="system-icon">
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
@@ -53,6 +57,9 @@ const router = useRouter()
 const readIds = ref(new Set())
 
 function getUser(id) { return users.find(u => u.id === id) ?? {} }
+
+const ACTION_EMOJI = { like: '❤', comment: '💬', reply: '↩', follow: '➕' }
+function actionEmoji(action) { return ACTION_EMOJI[action] ?? '' }
 
 function markRead(id, n) {
   readIds.value.add(id)
@@ -161,7 +168,7 @@ const grouped = computed(() => {
 .notif-item.unread { background: var(--primary-light); }
 .notif-item.unread:active { background: #F5D8DD; }
 
-.notif-icon { flex-shrink: 0; }
+.notif-icon { flex-shrink: 0; position: relative; }
 
 .actor-avatar {
   width: 38px;
@@ -180,6 +187,39 @@ const grouped = computed(() => {
   align-items: center;
   justify-content: center;
 }
+
+.badge-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #FFF8E0;
+  border: 1.5px solid #F4C842;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.action-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--bg-white);
+}
+
+.action-badge.action-comment,
+.action-badge.action-reply { background: #5B8DEF; }
+.action-badge.action-follow { background: #4CAF7D; }
 
 .notif-body {
   flex: 1;

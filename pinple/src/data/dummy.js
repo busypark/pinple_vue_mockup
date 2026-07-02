@@ -37,7 +37,7 @@ export const reviewPins = [
     ],
     representativeImageIndex: 0,
     tags: ['#오션뷰', '#야경', '#부산여행', '#광안대교'],
-    likes: 142, comments: 5, scraps: 18,
+    likes: 142, comments: 5, scraps: 18, views: 1247,
     createdAt: '2026-06-28', isLiked: false, isScrapped: true,
   },
   {
@@ -50,7 +50,7 @@ export const reviewPins = [
     ],
     representativeImageIndex: 0,
     tags: ['#한옥마을', '#전주여행', '#한복체험', '#비빔밥'],
-    likes: 89, comments: 3, scraps: 31,
+    likes: 89, comments: 3, scraps: 31, views: 834,
     createdAt: '2026-06-27', isLiked: true, isScrapped: true,
   },
   {
@@ -63,7 +63,7 @@ export const reviewPins = [
     ],
     representativeImageIndex: 0,
     tags: ['#제주여행', '#동백꽃', '#카멜리아힐', '#봄꽃'],
-    likes: 203, comments: 2, scraps: 57,
+    likes: 203, comments: 2, scraps: 57, views: 2103,
     createdAt: '2026-06-28', isLiked: false, isScrapped: true,
   },
   {
@@ -76,7 +76,7 @@ export const reviewPins = [
     ],
     representativeImageIndex: 0,
     tags: ['#경복궁', '#야간개장', '#서울여행', '#궁궐'],
-    likes: 76, comments: 0, scraps: 24,
+    likes: 76, comments: 0, scraps: 24, views: 612,
     createdAt: '2026-06-26', isLiked: false, isScrapped: false,
   },
   {
@@ -89,7 +89,7 @@ export const reviewPins = [
     ],
     representativeImageIndex: 0,
     tags: ['#해운대', '#일출', '#부산', '#새벽'],
-    likes: 118, comments: 0, scraps: 22,
+    likes: 118, comments: 0, scraps: 22, views: 958,
     createdAt: '2026-06-25', isLiked: false, isScrapped: true,
   },
   {
@@ -102,7 +102,7 @@ export const reviewPins = [
     ],
     representativeImageIndex: 0,
     tags: ['#성산일출봉', '#제주', '#등반', '#일출'],
-    likes: 55, comments: 0, scraps: 13,
+    likes: 55, comments: 0, scraps: 13, views: 441,
     createdAt: '2026-06-24', isLiked: false, isScrapped: true,
   },
   {
@@ -114,7 +114,7 @@ export const reviewPins = [
     ],
     representativeImageIndex: 0,
     tags: ['#전주카페', '#한옥마을', '#쌍화차', '#분위기맛집'],
-    likes: 67, comments: 0, scraps: 11,
+    likes: 67, comments: 0, scraps: 11, views: 523,
     createdAt: '2026-06-23', isLiked: false, isScrapped: false,
   },
   {
@@ -127,7 +127,7 @@ export const reviewPins = [
     ],
     representativeImageIndex: 0,
     tags: ['#경복궁', '#야간개장', '#서울여행', '#첫방문'],
-    likes: 12, comments: 0, scraps: 3,
+    likes: 12, comments: 0, scraps: 3, views: 87,
     createdAt: '2026-06-28', isLiked: false, isScrapped: false,
   },
   {
@@ -139,7 +139,7 @@ export const reviewPins = [
     ],
     representativeImageIndex: 0,
     tags: ['#광안리', '#조개구이', '#부산야경', '#맛집'],
-    likes: 8, comments: 0, scraps: 2,
+    likes: 8, comments: 0, scraps: 2, views: 64,
     createdAt: '2026-06-27', isLiked: false, isScrapped: false,
   },
 ]
@@ -206,10 +206,22 @@ export const dummyComments = [
   { id: 10, pinId: 3, authorId: 4, text: '입장료 가격이 얼마예요? 가족이랑 가려고 하는데', createdAt: '2026-06-28 14:55', likes: 1 },
 ]
 
+export const badges = [
+  { id: 1, name: '첫 발걸음', desc: '첫 번째 리뷰핀 작성', color: '#E8536A', earned: true },
+  { id: 2, name: '핀 수집가', desc: '리뷰핀 10개 작성', color: '#F4A442', earned: false },
+  { id: 3, name: '탐험가', desc: '5개 이상 지역 방문', color: '#4CAF7D', earned: false },
+  { id: 4, name: '소통러', desc: '댓글 20개 작성', color: '#5B8DEF', earned: false },
+  { id: 5, name: '인기스타', desc: '좋아요 100개 받기', color: '#F4A442', earned: false },
+  { id: 6, name: '핀크루장', desc: '팔로워 50명 달성', color: '#A259E6', earned: false },
+  { id: 7, name: '여행왕', desc: '10개 이상 지역 방문', color: '#4CAF7D', earned: false },
+  { id: 8, name: '핀플리스트', desc: '리뷰핀 50개 작성', color: '#E8536A', earned: false },
+]
+
 export const notifications = [
-  { id: 1, type: 'user', date: '오늘', actorId: 2, action: 'like', targetReviewPinId: 8, text: '맛집탐험가님이 회원님의 리뷰핀에 좋아요를 눌렀습니다.' },
-  { id: 2, type: 'user', date: '오늘', actorId: 3, action: 'comment', targetReviewPinId: 8, text: '감성사진가님이 댓글을 남겼습니다: "멋진 야경이에요!"' },
-  { id: 3, type: 'user', date: '어제', actorId: 1, action: 'follow', targetReviewPinId: null, text: '여행러버님이 회원님을 팔로우하기 시작했습니다.' },
-  { id: 4, type: 'system', date: '어제', actorId: null, action: 'system', targetReviewPinId: null, text: '회원님의 리뷰핀이 오늘의 인기 핀으로 선정되었습니다.' },
-  { id: 5, type: 'system', date: '6월 25일', actorId: null, action: 'system', targetReviewPinId: null, text: '핀플 서비스 이용약관이 업데이트되었습니다.' },
+  { id: 1, type: 'user',  date: '오늘',     actorId: 2,    action: 'like',    targetReviewPinId: 8,    text: '맛집탐험가님이 회원님의 리뷰핀에 좋아요를 눌렀습니다.' },
+  { id: 2, type: 'user',  date: '오늘',     actorId: 3,    action: 'comment', targetReviewPinId: 8,    text: '감성사진가님이 댓글을 남겼습니다: "멋진 야경이에요!"' },
+  { id: 3, type: 'user',  date: '오늘',     actorId: 1,    action: 'reply',   targetReviewPinId: 5,    text: '여행러버님이 회원님의 댓글에 대댓글을 달았습니다.' },
+  { id: 4, type: 'user',  date: '어제',     actorId: 4,    action: 'follow',  targetReviewPinId: null, text: '제주한달살기님이 회원님을 팔로우하기 시작했습니다.' },
+  { id: 5, type: 'badge', date: '어제',     actorId: null, action: 'badge',   targetReviewPinId: null, text: '새 뱃지를 획득했어요! 🎖 "첫 발걸음" — 첫 번째 리뷰핀을 작성했습니다.' },
+  { id: 6, type: 'user',  date: '6월 28일', actorId: 2,    action: 'like',    targetReviewPinId: 3,    text: '맛집탐험가님이 회원님의 리뷰핀에 좋아요를 눌렀습니다.' },
 ]

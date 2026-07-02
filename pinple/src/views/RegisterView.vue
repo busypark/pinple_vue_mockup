@@ -65,6 +65,12 @@
 
       <!-- ═══════ FEED TYPE ═══════ -->
       <template v-if="type === 'feed'">
+        <!-- 노지일 때만 제목 입력 -->
+        <template v-if="placeMode === 'nooji'">
+          <div class="section-label">제목</div>
+          <input v-model="feedTitle" class="reg-input reg-title-input" placeholder="제목을 입력하세요" maxlength="80" />
+        </template>
+
         <!-- Images -->
         <div class="section-row">
           <span class="section-label">이미지</span>
@@ -111,14 +117,57 @@
 
       <!-- ═══════ COMMON: Place ═══════ -->
       <div class="section-label">장소핀</div>
-      <div class="place-input-wrap">
+
+      <!-- 장소 유형 선택 -->
+      <div class="place-mode-row">
+        <button
+          class="place-mode-btn"
+          :class="{ active: placeMode === 'existing' }"
+          @click="placeMode = 'existing'"
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          기존 장소 선택
+        </button>
+        <button
+          class="place-mode-btn"
+          :class="{ active: placeMode === 'nooji' }"
+          @click="placeMode = 'nooji'"
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          노지 직접 등록
+        </button>
+      </div>
+
+      <!-- 기존 장소 검색 -->
+      <div v-if="placeMode === 'existing'" class="place-input-wrap">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--text-hint)" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         <input class="reg-input place-inp" placeholder="장소를 검색하세요 (추후 구현 예정)" disabled />
       </div>
 
+      <!-- 노지 위치 등록 -->
+      <div v-else class="nooji-area">
+        <div class="nooji-map-placeholder">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="var(--text-hint)" stroke-width="1.5" stroke-linecap="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span class="nooji-map-label">지도에서 위치 선택</span>
+          <span class="nooji-map-sub">추후 구현 예정</span>
+        </div>
+        <div class="nooji-info-row">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--text-hint)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span>선택한 위치는 <b>핀크루 발견 장소</b>에 자동으로 묶입니다</span>
+        </div>
+      </div>
+
       <!-- ═══════ COMMON: Category ═══════ -->
       <div class="section-label">카테고리</div>
-      <div class="cat-scroll">
+      <!-- 노지: 자동 지정 -->
+      <div v-if="placeMode === 'nooji'" class="nooji-cat-row">
+        <span class="nooji-cat-chip">사용자 등록</span>
+        <span class="nooji-cat-hint">노지 장소는 자동 지정됩니다</span>
+      </div>
+      <!-- 기존 장소: 선택 -->
+      <div v-else class="cat-scroll">
         <button
           v-for="cat in categories"
           :key="cat"
@@ -188,16 +237,6 @@
         </div>
       </div>
 
-      <!-- Privacy row -->
-      <div class="privacy-row">
-        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="var(--text-hint)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        <span class="privacy-label">공개 범위</span>
-        <select v-model="privacy" class="privacy-select">
-          <option>전체공개</option>
-          <option>비공개</option>
-        </select>
-      </div>
-
       <!-- Submit -->
       <button class="submit-btn" @click="handleSubmit">핀 등록하기</button>
     </div>
@@ -233,6 +272,7 @@ function nextId() { return _blkId++ }
 // ── Feed state ────────────────────────────────
 const feedImages = ref([])   // { id, src, isRep }
 const feedBody   = ref('')
+const feedTitle  = ref('')   // 노지일 때만 사용
 
 // ── Blog state ────────────────────────────────
 const repImgSrc  = ref('')
@@ -241,10 +281,10 @@ const bodyBlocks = ref([{ id: nextId(), type: 'text', content: '' }])
 const focusedBlockIdx = ref(null)
 
 // ── Common state ──────────────────────────────
+const placeMode   = ref('existing')  // 'existing' | 'nooji'
 const selectedCat = ref('')
 const tags        = ref([])
 const tagInput    = ref('')
-const privacy     = ref('전체공개')
 
 // ── UI state ─────────────────────────────────
 const showDraftPrompt = ref(false)
@@ -305,7 +345,7 @@ function getDraft() {
 
 function hasMeaningfulContent() {
   if (type.value === 'feed') {
-    return feedImages.value.length > 0 || feedBody.value.trim()
+    return feedImages.value.length > 0 || feedBody.value.trim() || feedTitle.value.trim()
   }
   return blogTitle.value.trim() ||
     bodyBlocks.value.some(b => b.content?.trim() || b.type === 'image')
@@ -316,18 +356,19 @@ function saveDraftData() {
     feedDraft.value = {
       feedImages: feedImages.value.map(img => ({ ...img })),
       feedBody:   feedBody.value,
+      feedTitle:  feedTitle.value,
+      placeMode:  placeMode.value,
       selectedCat: selectedCat.value,
       tags: [...tags.value],
-      privacy: privacy.value,
     }
   } else {
     blogDraft.value = {
       repImgSrc:  repImgSrc.value,
       blogTitle:  blogTitle.value,
       bodyBlocks: JSON.parse(JSON.stringify(bodyBlocks.value)),
+      placeMode:  placeMode.value,
       selectedCat: selectedCat.value,
       tags: [...tags.value],
-      privacy: privacy.value,
     }
   }
 }
@@ -335,17 +376,18 @@ function saveDraftData() {
 function loadDraft() {
   const draft = getDraft()
   if (!draft) return
+  placeMode.value   = draft.placeMode  ?? 'existing'
+  selectedCat.value = draft.selectedCat
+  tags.value        = draft.tags
   if (type.value === 'feed') {
     feedImages.value = draft.feedImages
     feedBody.value   = draft.feedBody
+    feedTitle.value  = draft.feedTitle ?? ''
   } else {
     repImgSrc.value  = draft.repImgSrc
     blogTitle.value  = draft.blogTitle
     bodyBlocks.value = draft.bodyBlocks
   }
-  selectedCat.value = draft.selectedCat
-  tags.value        = draft.tags
-  privacy.value     = draft.privacy
   showDraftPrompt.value = false
 }
 
@@ -623,6 +665,38 @@ onMounted(() => {
   font-weight: 600;
 }
 
+/* ── Place mode toggle ──────────────────── */
+.place-mode-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.place-mode-btn {
+  flex: 1;
+  height: 38px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-white);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.15s;
+}
+
+.place-mode-btn.active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+/* ── Place search ───────────────────────── */
 .place-input-wrap {
   position: relative;
   display: flex;
@@ -637,6 +711,77 @@ onMounted(() => {
 
 .place-inp {
   padding-left: 32px;
+}
+
+/* ── Nooji area ─────────────────────────── */
+.nooji-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nooji-map-placeholder {
+  height: 100px;
+  border: 1.5px dashed var(--border-dark);
+  border-radius: 12px;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: default;
+}
+
+.nooji-map-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.nooji-map-sub {
+  font-size: 11px;
+  color: var(--text-hint);
+}
+
+.nooji-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  padding: 0 2px;
+}
+
+.nooji-info-row svg { flex-shrink: 0; margin-top: 1px; color: var(--text-hint); }
+
+.nooji-info-row span {
+  font-size: 11px;
+  color: var(--text-hint);
+  line-height: 1.5;
+}
+
+.nooji-info-row b { color: var(--text-secondary); }
+
+/* ── Nooji category ─────────────────────── */
+.nooji-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.nooji-cat-chip {
+  background: var(--bg);
+  border: 1.5px solid var(--border-dark);
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 5px 14px;
+}
+
+.nooji-cat-hint {
+  font-size: 11px;
+  color: var(--text-hint);
 }
 
 /* ── Category chips ─────────────────────── */
@@ -768,7 +913,7 @@ onMounted(() => {
 
 /* Tags */
 .tags-area {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .tags-chips-wrap {
@@ -818,34 +963,6 @@ onMounted(() => {
 }
 
 .tag-input::placeholder { color: var(--text-hint); }
-
-/* Privacy */
-.privacy-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 10px;
-}
-
-.privacy-label {
-  font-size: 12px;
-  color: var(--text-hint);
-  font-weight: 600;
-}
-
-.privacy-select {
-  margin-left: auto;
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  padding: 4px 8px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-primary);
-  font-family: inherit;
-  background: var(--bg-white);
-  outline: none;
-  cursor: pointer;
-}
 
 /* Submit */
 .submit-btn {
@@ -1018,7 +1135,7 @@ onMounted(() => {
 /* ── Toast ──────────────────────────────── */
 .save-toast {
   position: absolute;
-  bottom: 82px;
+  bottom: 72px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 300;
