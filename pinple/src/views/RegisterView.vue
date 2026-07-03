@@ -146,6 +146,7 @@
 
       <!-- 노지 위치 등록 -->
       <div v-else class="nooji-area">
+        <input v-model="noojiName" class="reg-input" placeholder="장소 이름을 입력하세요" maxlength="30" />
         <div class="nooji-map-placeholder">
           <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="var(--text-hint)" stroke-width="1.5" stroke-linecap="round">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
@@ -282,6 +283,7 @@ const focusedBlockIdx = ref(null)
 
 // ── Common state ──────────────────────────────
 const placeMode   = ref('existing')  // 'existing' | 'nooji'
+const noojiName   = ref('')          // 노지 등록 시 새 장소 이름
 const selectedCat = ref('')
 const tags        = ref([])
 const tagInput    = ref('')
@@ -344,6 +346,7 @@ function getDraft() {
 }
 
 function hasMeaningfulContent() {
+  if (noojiName.value.trim()) return true
   if (type.value === 'feed') {
     return feedImages.value.length > 0 || feedBody.value.trim() || feedTitle.value.trim()
   }
@@ -358,6 +361,7 @@ function saveDraftData() {
       feedBody:   feedBody.value,
       feedTitle:  feedTitle.value,
       placeMode:  placeMode.value,
+      noojiName:  noojiName.value,
       selectedCat: selectedCat.value,
       tags: [...tags.value],
     }
@@ -367,6 +371,7 @@ function saveDraftData() {
       blogTitle:  blogTitle.value,
       bodyBlocks: JSON.parse(JSON.stringify(bodyBlocks.value)),
       placeMode:  placeMode.value,
+      noojiName:  noojiName.value,
       selectedCat: selectedCat.value,
       tags: [...tags.value],
     }
@@ -377,6 +382,7 @@ function loadDraft() {
   const draft = getDraft()
   if (!draft) return
   placeMode.value   = draft.placeMode  ?? 'existing'
+  noojiName.value   = draft.noojiName  ?? ''
   selectedCat.value = draft.selectedCat
   tags.value        = draft.tags
   if (type.value === 'feed') {

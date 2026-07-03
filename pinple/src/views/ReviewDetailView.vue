@@ -99,20 +99,61 @@
 
       <!-- ─ 고정 액션 버튼 ─ -->
       <div class="sticky-actions">
-        <button class="action-btn" :class="{ liked: isLikedLocal }" @click="toggleLike">
-          <svg viewBox="0 0 24 24" :fill="isLikedLocal ? '#E8536A' : 'none'" stroke="#E8536A" stroke-width="2" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-          <span>{{ likeCountLocal }}</span>
-        </button>
-        <button class="action-btn" @click="showComments = true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" width="18" height="18"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          <span>{{ commentsForPin.length + localComments.length }}</span>
-        </button>
-        <button class="action-btn" :class="{ scrapped: isScrappedLocal }" @click="toggleScrap">
-          <svg viewBox="0 0 24 24" :fill="isScrappedLocal ? '#E8536A' : 'none'" stroke="#E8536A" stroke-width="2" width="18" height="18"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-          <span>{{ scrapsDisplay }}</span>
+        <div class="actions-main">
+          <button class="action-btn" :class="{ liked: isLikedLocal }" @click="toggleLike">
+            <svg viewBox="0 0 24 24" :fill="isLikedLocal ? '#E8536A' : 'none'" stroke="#E8536A" stroke-width="2" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            <span>{{ likeCountLocal }}</span>
+          </button>
+          <button class="action-btn" @click="showComments = true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" width="18" height="18"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>{{ commentsForPin.length + localComments.length }}</span>
+          </button>
+          <button class="action-btn" :class="{ scrapped: isScrappedLocal }" @click="toggleScrap">
+            <svg viewBox="0 0 24 24" :fill="isScrappedLocal ? '#E8536A' : 'none'" stroke="#E8536A" stroke-width="2" width="18" height="18"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            <span>{{ scrapsDisplay }}</span>
+          </button>
+        </div>
+        <button class="report-btn" @click="openReportModal" aria-label="신고하기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
         </button>
       </div>
     </div>
+
+    <!-- ══ 신고 오버레이 ══ -->
+    <Transition name="fade-overlay">
+      <div v-if="showReportModal" class="report-overlay-dim" @click.self="closeReportModal">
+        <div class="report-dialog">
+          <div class="report-dialog-title">신고하기</div>
+          <div class="report-reason-list">
+            <label
+              v-for="r in reportReasons"
+              :key="r.value"
+              class="report-reason-item"
+              :class="{ selected: reportReason === r.value }"
+            >
+              <input type="radio" :value="r.value" v-model="reportReason" class="report-radio" />
+              <span>{{ r.label }}</span>
+            </label>
+          </div>
+          <textarea
+            v-if="reportReason === 'other'"
+            v-model="reportDetail"
+            class="report-detail-input"
+            placeholder="신고 사유를 입력해주세요"
+            rows="3"
+          />
+          <div class="report-dialog-btns">
+            <button class="report-btn-cancel" @click="closeReportModal">취소</button>
+            <button class="report-btn-submit" :disabled="!canSubmitReport" @click="submitReport">신고하기</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- 신고 관련 토스트 -->
+    <Transition name="toast-anim">
+      <div v-if="showReportToast" class="report-toast">{{ reportToastMsg }}</div>
+    </Transition>
 
     <!-- ══ 스크랩 폴더 선택 오버레이 ══ -->
     <Transition name="slide-up">
@@ -160,31 +201,63 @@
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
-        <!-- 댓글 목록 -->
+        <!-- 댓글 목록 (원댓글 + 답글 1단계) -->
         <div class="comment-list">
-          <div v-for="c in allComments" :key="c.id" class="comment-item">
-            <img :src="getUser(c.authorId).profileImg" class="c-avatar" />
-            <div class="c-body">
-              <div class="c-top">
-                <span class="c-name">{{ getUser(c.authorId).nickname }}</span>
-                <span class="c-time">{{ c.createdAt }}</span>
+          <div v-for="c in groupedComments" :key="c.id" class="comment-thread">
+            <div class="comment-item">
+              <img :src="getUser(c.authorId).profileImg" class="c-avatar" />
+              <div class="c-body">
+                <div class="c-top">
+                  <span class="c-name">{{ getUser(c.authorId).nickname }}</span>
+                  <span class="c-time">{{ c.createdAt }}</span>
+                </div>
+                <p class="c-text">{{ c.text }}</p>
+                <div class="c-actions">
+                  <button class="c-like-btn">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    {{ c.likes }}
+                  </button>
+                  <button class="c-reply-btn" @click="startReply(c)">답글 달기</button>
+                </div>
               </div>
-              <p class="c-text">{{ c.text }}</p>
-              <div class="c-actions">
-                <button class="c-like-btn">
-                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                  {{ c.likes }}
-                </button>
+            </div>
+
+            <!-- 답글 (1단계만) -->
+            <div v-if="c.replies.length" class="reply-list">
+              <div v-for="r in c.replies" :key="r.id" class="comment-item reply-item">
+                <img :src="getUser(r.authorId).profileImg" class="c-avatar c-avatar-sm" />
+                <div class="c-body">
+                  <div class="c-top">
+                    <span class="c-name">{{ getUser(r.authorId).nickname }}</span>
+                    <span class="c-time">{{ r.createdAt }}</span>
+                  </div>
+                  <p class="c-text">{{ r.text }}</p>
+                  <div class="c-actions">
+                    <button class="c-like-btn">
+                      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                      {{ r.likes }}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        <!-- 답글 대상 표시줄 -->
+        <div v-if="replyTarget" class="reply-target-bar">
+          <span>{{ replyTarget.nickname }}님에게 답글 남기는 중</span>
+          <button class="reply-target-cancel" @click="cancelReply">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
         <!-- 입력창 -->
         <div class="comment-input-row">
           <img :src="currentUser.profileImg" class="c-avatar" />
           <input
             v-model="newComment"
-            placeholder="댓글을 입력하세요..."
+            :placeholder="replyTarget ? '답글을 입력하세요...' : '댓글을 입력하세요...'"
             class="comment-input"
             @keydown.enter="submitComment"
           />
@@ -233,6 +306,24 @@ const showScrapModal  = ref(false)
 const newFolderInput  = ref('')
 const newComment      = ref('')
 const localComments   = ref([])
+const replyTarget     = ref(null)  // { id, nickname } — 답글 작성 대상 (null이면 일반 댓글)
+
+// ── 신고 ──
+const showReportModal = ref(false)
+const reportReason    = ref('')
+const reportDetail    = ref('')
+const isReportedLocal = ref(false)
+const showReportToast = ref(false)
+const reportToastMsg  = ref('')
+
+const reportReasons = [
+  { value: 'spam', label: '스팸/광고' },
+  { value: 'abuse', label: '욕설·혐오 표현' },
+  { value: 'adult', label: '음란물' },
+  { value: 'misinformation', label: '허위 정보' },
+  { value: 'copyright', label: '저작권 침해' },
+  { value: 'other', label: '기타' },
+]
 
 const FOLLOWING_IDS = [1, 2, 3]
 const commentsForPin = computed(() => dummyComments.filter(c => c.pinId === pinId.value))
@@ -255,6 +346,11 @@ function init() {
   newFolderInput.value  = ''
   newComment.value      = ''
   localComments.value   = []
+  replyTarget.value     = null
+  showReportModal.value = false
+  reportReason.value    = ''
+  reportDetail.value    = ''
+  isReportedLocal.value = false
 }
 
 // ── 이미지 ──
@@ -331,19 +427,73 @@ function createFolderAndScrap() {
   showScrapModal.value = false
 }
 
-// ── 댓글 ──
-const allComments = computed(() => [...commentsForPin.value, ...localComments.value])
+// ── 신고 ──
+const canSubmitReport = computed(() => {
+  if (!reportReason.value) return false
+  if (reportReason.value === 'other' && !reportDetail.value.trim()) return false
+  return true
+})
+
+function flashReportToast(msg) {
+  reportToastMsg.value = msg
+  showReportToast.value = true
+  setTimeout(() => { showReportToast.value = false }, 2000)
+}
+
+function openReportModal() {
+  if (isReportedLocal.value) {
+    flashReportToast('이미 신고한 리뷰핀이에요')
+    return
+  }
+  reportReason.value = ''
+  reportDetail.value = ''
+  showReportModal.value = true
+}
+
+function closeReportModal() {
+  showReportModal.value = false
+}
+
+function submitReport() {
+  if (!canSubmitReport.value) return
+  showReportModal.value = false
+  isReportedLocal.value = true
+  flashReportToast('신고가 접수됐어요')
+}
+
+// ── 댓글 (답글은 1단계로 평탄화) ──
+const allFlatComments = computed(() => [...commentsForPin.value, ...localComments.value])
+const groupedComments = computed(() => {
+  const top = allFlatComments.value.filter(c => !c.parentId)
+  return top.map(c => ({
+    ...c,
+    replies: allFlatComments.value.filter(r => r.parentId === c.id),
+  }))
+})
+
+function startReply(comment) {
+  replyTarget.value = { id: comment.id, nickname: getUser(comment.authorId).nickname }
+  newComment.value = `@${replyTarget.value.nickname} `
+}
+
+function cancelReply() {
+  replyTarget.value = null
+  newComment.value = ''
+}
+
 function submitComment() {
   const text = newComment.value.trim()
   if (!text) return
   localComments.value.push({
     id: Date.now(),
     authorId: currentUser.id,
+    parentId: replyTarget.value?.id ?? null,
     text,
     createdAt: new Date().toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
     likes: 0,
   })
   newComment.value = ''
+  replyTarget.value = null
 }
 </script>
 
@@ -564,9 +714,14 @@ function submitComment() {
 /* ── 고정 액션 버튼 ── */
 .sticky-actions {
   display: flex;
+  align-items: stretch;
   border-top: 1px solid var(--border);
   background: var(--bg-white);
   flex-shrink: 0;
+}
+.actions-main {
+  flex: 1;
+  display: flex;
 }
 .action-btn {
   flex: 1;
@@ -587,6 +742,148 @@ function submitComment() {
 .action-btn:active { background: var(--bg); }
 .action-btn.liked span  { color: var(--primary); }
 .action-btn.scrapped span { color: var(--primary); }
+
+.report-btn {
+  flex-shrink: 0;
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-left: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.report-btn:active { background: var(--bg); }
+
+/* ── 신고 오버레이 ── */
+.report-overlay-dim {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.report-dialog {
+  background: var(--bg-white);
+  border-radius: 18px;
+  padding: 22px 20px 18px;
+  width: 290px;
+}
+
+.report-dialog-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.report-reason-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+
+.report-reason-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-radius: 8px;
+  transition: background 0.1s, color 0.1s;
+}
+
+.report-reason-item.selected {
+  color: var(--primary);
+  font-weight: 700;
+  background: var(--primary-light);
+}
+
+.report-radio {
+  accent-color: var(--primary);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.report-detail-input {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-primary);
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+  line-height: 1.5;
+  margin: 6px 0 4px;
+  transition: border-color 0.15s;
+}
+.report-detail-input:focus { border-color: var(--primary); }
+
+.report-dialog-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.report-btn-cancel {
+  flex: 1;
+  height: 42px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.report-btn-submit {
+  flex: 1;
+  height: 42px;
+  border: none;
+  border-radius: 10px;
+  background: var(--primary);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.report-btn-submit:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── 신고 토스트 ── */
+.report-toast {
+  position: absolute;
+  bottom: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 300;
+  background: rgba(30, 30, 30, 0.85);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
 
 /* ── 스크랩 오버레이 ── */
 .scrap-overlay {
@@ -748,7 +1045,12 @@ function submitComment() {
   color: var(--text-primary);
   line-height: 1.5;
 }
-.c-actions { margin-top: 4px; }
+.c-actions {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
 .c-like-btn {
   display: flex;
   align-items: center;
@@ -759,6 +1061,49 @@ function submitComment() {
   color: var(--text-hint);
   cursor: pointer;
   padding: 0;
+}
+.c-reply-btn {
+  background: none;
+  border: none;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-hint);
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+.c-reply-btn:active { color: var(--primary); }
+
+/* ── 답글 (1단계) ── */
+.reply-list {
+  margin-left: 42px;
+  border-left: 2px solid var(--border);
+  padding-left: 10px;
+}
+.reply-item { padding: 8px 16px 8px 0; }
+.c-avatar-sm { width: 26px; height: 26px; }
+
+/* ── 답글 대상 표시줄 ── */
+.reply-target-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: var(--primary-light);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+}
+.reply-target-cancel {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
 }
 
 .comment-input-row {
@@ -823,4 +1168,10 @@ function submitComment() {
   transform: translateY(100%);
   opacity: 0;
 }
+
+.fade-overlay-enter-active, .fade-overlay-leave-active { transition: opacity 0.2s; }
+.fade-overlay-enter-from, .fade-overlay-leave-to { opacity: 0; }
+
+.toast-anim-enter-active, .toast-anim-leave-active { transition: opacity 0.3s, transform 0.3s; }
+.toast-anim-enter-from, .toast-anim-leave-to { opacity: 0; transform: translateX(-50%) translateY(8px); }
 </style>

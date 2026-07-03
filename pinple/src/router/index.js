@@ -15,16 +15,22 @@ import AccountView from '../views/AccountView.vue'
 import LoginView from '../views/LoginView.vue'
 import EmailLoginView from '../views/EmailLoginView.vue'
 import SignupView from '../views/SignupView.vue'
+import EmailVerifyPendingView from '../views/EmailVerifyPendingView.vue'
+import PasswordResetRequestView from '../views/PasswordResetRequestView.vue'
+import PasswordResetConfirmView from '../views/PasswordResetConfirmView.vue'
 import UserProfileView from '../views/UserProfileView.vue'
 import { isLoggedIn } from '../store/auth.js'
 
-const AUTH_ROUTES = ['login', 'login-email', 'signup']
+const AUTH_ROUTES = ['login', 'login-email', 'signup', 'signup-verify', 'password-reset-request', 'password-reset-confirm']
 
 const routes = [
   // Auth
   { path: '/login', name: 'login', component: LoginView, meta: { showNav: false } },
   { path: '/login/email', name: 'login-email', component: EmailLoginView, meta: { showNav: false } },
   { path: '/signup', name: 'signup', component: SignupView, meta: { showNav: false } },
+  { path: '/signup/verify', name: 'signup-verify', component: EmailVerifyPendingView, meta: { showNav: false } },
+  { path: '/password-reset', name: 'password-reset-request', component: PasswordResetRequestView, meta: { showNav: false } },
+  { path: '/password-reset/confirm', name: 'password-reset-confirm', component: PasswordResetConfirmView, meta: { showNav: false } },
 
   // App
   { path: '/', name: 'home', component: HomeView, meta: { showNav: true } },

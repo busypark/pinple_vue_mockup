@@ -152,7 +152,7 @@
           <div class="dialog-desc">탈퇴 시 모든 데이터가 삭제되며<br>복구할 수 없습니다.</div>
           <div class="dialog-btns">
             <button class="dialog-btn-cancel" @click="showWithdrawDialog = false">취소</button>
-            <button class="dialog-btn-confirm" @click="showWithdrawDialog = false">탈퇴</button>
+            <button class="dialog-btn-confirm" @click="handleWithdraw">탈퇴</button>
           </div>
         </div>
       </div>
@@ -198,6 +198,12 @@ function handlePwChange() {
 }
 
 function handleLogout() {
+  isLoggedIn.value = false
+  router.push('/login')
+}
+
+function handleWithdraw() {
+  showWithdrawDialog.value = false
   isLoggedIn.value = false
   router.push('/login')
 }

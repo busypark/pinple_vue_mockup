@@ -194,16 +194,19 @@ export const scraps = [
 ]
 
 export const dummyComments = [
-  { id: 1, pinId: 1, authorId: 1, text: '저도 꼭 가보고 싶어요! 언제가 제일 예쁜가요?', createdAt: '2026-06-28 14:23', likes: 4 },
-  { id: 2, pinId: 1, authorId: 3, text: '야경이 정말 대박이죠 ㅎㅎ 저는 10시쯤에 갔어요~', createdAt: '2026-06-28 15:41', likes: 7 },
-  { id: 3, pinId: 1, authorId: 4, text: '광안대교 배경으로 사진 찍으면 너무 예뻐요!', createdAt: '2026-06-28 17:05', likes: 2 },
-  { id: 4, pinId: 1, authorId: 2, text: '이번 주말에 갈 계획인데 꼭 참고할게요 감사합니다 :)', createdAt: '2026-06-28 18:30', likes: 1 },
-  { id: 5, pinId: 1, authorId: 3, text: '주차는 어디에 했어요? 자차로 가려고요', createdAt: '2026-06-28 21:12', likes: 0 },
-  { id: 6, pinId: 2, authorId: 2, text: '한복 대여 어디서 하셨어요? 저도 입어보고 싶어요!', createdAt: '2026-06-28 09:10', likes: 5 },
-  { id: 7, pinId: 2, authorId: 3, text: '전주 비빔밥 진짜 맛있죠 저도 다녀왔는데 또 가고 싶어요', createdAt: '2026-06-28 10:30', likes: 3 },
-  { id: 8, pinId: 2, authorId: 4, text: '한옥마을 골목 안쪽까지 들어가보세요 숨겨진 맛집 많아요', createdAt: '2026-06-27 20:15', likes: 8 },
-  { id: 9, pinId: 3, authorId: 1, text: '저도 작년에 갔는데 완전 힐링이었어요 ㅠㅠ', createdAt: '2026-06-28 13:20', likes: 4 },
-  { id: 10, pinId: 3, authorId: 4, text: '입장료 가격이 얼마예요? 가족이랑 가려고 하는데', createdAt: '2026-06-28 14:55', likes: 1 },
+  { id: 1, pinId: 1, authorId: 1, parentId: null, text: '저도 꼭 가보고 싶어요! 언제가 제일 예쁜가요?', createdAt: '2026-06-28 14:23', likes: 4 },
+  { id: 2, pinId: 1, authorId: 3, parentId: null, text: '야경이 정말 대박이죠 ㅎㅎ 저는 10시쯤에 갔어요~', createdAt: '2026-06-28 15:41', likes: 7 },
+  { id: 3, pinId: 1, authorId: 4, parentId: null, text: '광안대교 배경으로 사진 찍으면 너무 예뻐요!', createdAt: '2026-06-28 17:05', likes: 2 },
+  { id: 4, pinId: 1, authorId: 2, parentId: null, text: '이번 주말에 갈 계획인데 꼭 참고할게요 감사합니다 :)', createdAt: '2026-06-28 18:30', likes: 1 },
+  { id: 5, pinId: 1, authorId: 3, parentId: null, text: '주차는 어디에 했어요? 자차로 가려고요', createdAt: '2026-06-28 21:12', likes: 0 },
+  { id: 11, pinId: 1, authorId: 2, parentId: 1, text: '@여행러버 저녁 8~9시쯤이 제일 예뻐요! 노을 질 때부터 야경 켜질 때까지가 진짜 예술이에요', createdAt: '2026-06-28 16:02', likes: 3 },
+  { id: 12, pinId: 1, authorId: 1, parentId: 1, text: '오 감사합니다! 저녁에 맞춰서 가봐야겠네요', createdAt: '2026-06-28 16:20', likes: 1 },
+  { id: 6, pinId: 2, authorId: 2, parentId: null, text: '한복 대여 어디서 하셨어요? 저도 입어보고 싶어요!', createdAt: '2026-06-28 09:10', likes: 5 },
+  { id: 13, pinId: 2, authorId: 1, parentId: 6, text: '@맛집탐험가 한옥마을 안쪽 대여점에서 했어요, 가격도 저렴해요', createdAt: '2026-06-28 11:00', likes: 2 },
+  { id: 7, pinId: 2, authorId: 3, parentId: null, text: '전주 비빔밥 진짜 맛있죠 저도 다녀왔는데 또 가고 싶어요', createdAt: '2026-06-28 10:30', likes: 3 },
+  { id: 8, pinId: 2, authorId: 4, parentId: null, text: '한옥마을 골목 안쪽까지 들어가보세요 숨겨진 맛집 많아요', createdAt: '2026-06-27 20:15', likes: 8 },
+  { id: 9, pinId: 3, authorId: 1, parentId: null, text: '저도 작년에 갔는데 완전 힐링이었어요 ㅠㅠ', createdAt: '2026-06-28 13:20', likes: 4 },
+  { id: 10, pinId: 3, authorId: 4, parentId: null, text: '입장료 가격이 얼마예요? 가족이랑 가려고 하는데', createdAt: '2026-06-28 14:55', likes: 1 },
 ]
 
 export const badges = [

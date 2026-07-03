@@ -17,13 +17,13 @@
 
       <!-- Social login -->
       <div class="social-btns">
-        <button class="btn-social btn-kakao" @click="loginSocial">
+        <button class="btn-social btn-kakao" @click="loginSocial('kakao')">
           <svg viewBox="0 0 24 24" width="20" height="20">
             <path fill="#3C1E1E" d="M12 3C7.03 3 3 6.36 3 10.5c0 2.6 1.63 4.88 4.1 6.23l-1.1 4.06c-.1.35.28.63.57.43l4.8-3.17c.51.05 1.04.08 1.58.08 4.97 0 9-3.36 9-7.5S16.97 3 12 3z" />
           </svg>
           카카오로 계속하기
         </button>
-        <button class="btn-social btn-google" @click="loginSocial">
+        <button class="btn-social btn-google" @click="loginSocial('google')">
           <svg viewBox="0 0 24 24" width="20" height="20">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57C21.36 18.21 22.56 15.39 22.56 12.25z" />
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -52,16 +52,29 @@
       <span class="signup-hint">계정이 없으신가요?</span>
       <button class="signup-link" @click="router.push('/signup')">회원가입</button>
     </div>
+
+    <!-- OAuth-이메일 계정 충돌 안내 토스트 -->
+    <Transition name="toast-anim">
+      <div v-if="showConflictToast" class="conflict-toast">이미 다른 방식으로 가입된 이메일입니다. 이메일로 로그인해주세요.</div>
+    </Transition>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { isLoggedIn } from '../store/auth.js'
 
 const router = useRouter()
+const showConflictToast = ref(false)
 
-function loginSocial() {
+function loginSocial(provider) {
+  // 데모용: 구글 계정은 이미 다른 방식으로 가입된 이메일 케이스를 보여준다 (OAuth-이메일 병합 안 함 정책)
+  if (provider === 'google') {
+    showConflictToast.value = true
+    setTimeout(() => { showConflictToast.value = false }, 2500)
+    return
+  }
   isLoggedIn.value = true
   router.push('/')
 }
@@ -73,6 +86,7 @@ function loginSocial() {
   display: flex;
   flex-direction: column;
   background: var(--bg-white);
+  position: relative;
 }
 
 .login-body {
@@ -210,4 +224,25 @@ function loginSocial() {
   cursor: pointer;
   font-family: inherit;
 }
+
+/* ── 계정 충돌 토스트 ─── */
+.conflict-toast {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: rgba(30, 30, 30, 0.85);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 20px;
+  white-space: nowrap;
+  max-width: 85%;
+  text-align: center;
+}
+
+.toast-anim-enter-active, .toast-anim-leave-active { transition: opacity 0.3s, transform 0.3s; }
+.toast-anim-enter-from, .toast-anim-leave-to { opacity: 0; transform: translateX(-50%) translateY(8px); }
 </style>

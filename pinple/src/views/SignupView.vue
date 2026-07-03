@@ -123,7 +123,7 @@ const canSubmit = computed(() =>
 
 function handleSignup() {
   if (!canSubmit.value) return
-  router.push('/login')
+  router.push({ name: 'signup-verify', query: { email: email.value } })
 }
 </script>
 

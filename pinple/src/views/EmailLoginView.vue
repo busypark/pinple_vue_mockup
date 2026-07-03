@@ -34,7 +34,7 @@
         />
       </div>
 
-      <button class="btn-forgot">비밀번호를 잊으셨나요?</button>
+      <button class="btn-forgot" @click="router.push('/password-reset')">비밀번호를 잊으셨나요?</button>
 
       <button class="btn-primary" @click="handleLogin">로그인</button>
     </div>
